@@ -5,7 +5,7 @@ export PACKAGE_LANGUAGE="golang"
 export CHANNEL_MAIN=mychannel
 export HLF_PATH=~/Hyperledger
 
-export PROJ_MATDAAN=~/Learning/Projects/matdaan
+export PROJ_MATDAAN=${HLF_PATH}/Projects/matdaan
 
 export MY_NETWORK=~/Hyperledger/fabric-samples/test-network
 export FABRIC_CFG_PATH=~/Hyperledger/fabric-samples/config
@@ -21,7 +21,7 @@ ${HLF_PATH}/fabric-samples/test-network/network.sh up createChannel -c ${CHANNEL
 
 
 # --------------------------------- Package the smart contract ---------------------------------------------------------------------------------------------------
-peer lifecycle chaincode package ${PACKAGE_ZIP} --path ~/Learning/Projects/matdaan/chaincode \
+peer lifecycle chaincode package ${PACKAGE_ZIP} --path ${PROJ_MATDAAN}/chaincode \
 --lang ${PACKAGE_LANGUAGE} --label ${PACKAGE_NAME}
 
 # --------------------------------- Install the chaincode package ------------------------------------------------------------------------------------------------
