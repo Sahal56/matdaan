@@ -1,5 +1,6 @@
-source ./set_env.sh
-# export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
+export PROJ_PATH=~/Hyperledger/matdaan
+export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=${PROJ_PATH}/hyperledger-fabric/fabric-samples/config
 
 # Let's install the chaincode on the Org1 peer first.
 # Set the following environment variables to operate the peer CLI as the Org1 admin user.

@@ -1,12 +1,6 @@
 package main
 
 import (
-	/*
-		fmt: Format package
-		encoding/json: to work with JSON
-		hyperledger: contractapi
-	*/
-
 	"encoding/json"
 	"fmt"
 
@@ -14,14 +8,12 @@ import (
 )
 
 /*
- SmartContract: It provides functions for managing votes. I have written in Go Language
- Voter struct represents a voter
- Candidate struct represents a candidate
+operations:
+    Register Voter
+	Cast Vote
 
- InitLedger initializes the ledger with some sample candidates (for testing)
- RegisterVoter registers a new voter
- CastVote : It allows a voter to cast their vote
- GetResults : It returns the vote count for each candidate
+
+Scalability Criteria | By channel based on Constituency/Region
 */
 
 type SmartContract struct {
@@ -29,22 +21,29 @@ type SmartContract struct {
 }
 
 type Voter struct {
-	ID       string `json:"ID"`
-	HasVoted bool   `json:"HasVoted"`
+	ID           string `json:"ID"`
+	Constituency string `json:"Constituency"`
+	HasVoted     bool   `json:"HasVoted"`
 }
 
 type Candidate struct {
-	ID    string `json:"ID"`
-	Name  string `json:"Name"`
-	Votes int    `json:"Votes"`
+	ID           string `json:"ID"`
+	Constituency string `json:"Constituency"`
+	Votes        int    `json:"Votes"`
 }
 
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
+	// statically giving input
 	candidates := []Candidate{
-		{ID: "CAND001", Name: "Sahal", Votes: 0},
-		{ID: "CAND002", Name: "Asim", Votes: 0},
-		{ID: "CAND003", Name: "Jay", Votes: 0},
+		{ID: "CAND001", Constituency: "Anand", Votes: 0},
+		{ID: "CAND002", Constituency: "Anand", Votes: 0},
+		{ID: "CAND003", Constituency: "Anand", Votes: 0},
+		{ID: "CAND004", Constituency: "Vadodara", Votes: 0},
+		{ID: "CAND005", Constituency: "Vadodara", Votes: 0},
+		{ID: "CAND006", Constituency: "Vadodara", Votes: 0},
 	}
+
+	// Dynamically Candidates can be filled based on particular channel's peer nodes based on constituency
 
 	for _, candidate := range candidates {
 		candidateBytes, _ := json.Marshal(candidate)
@@ -56,10 +55,13 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 	return nil
 }
 
-func (s *SmartContract) RegisterVoter(ctx contractapi.TransactionContextInterface, voterID string) error {
+func (s *SmartContract) RegisterVoter(ctx contractapi.TransactionContextInterface,
+	voterID string, constituency string) error {
+
 	voter := Voter{
-		ID:       voterID,
-		HasVoted: false,
+		ID:           voterID,
+		Constituency: constituency,
+		HasVoted:     false,
 	}
 
 	voterBytes, _ := json.Marshal(voter)
@@ -97,7 +99,7 @@ func (s *SmartContract) CastVote(ctx contractapi.TransactionContextInterface, vo
 	var candidate Candidate
 	json.Unmarshal(candidateBytes, &candidate)
 
-	candidate.Votes++
+	candidate.Votes = candidate.Votes + 1
 	candidateBytes, _ = json.Marshal(candidate)
 	err = ctx.GetStub().PutState(candidateID, candidateBytes)
 	if err != nil {
@@ -120,7 +122,9 @@ func (s *SmartContract) GetResults(ctx contractapi.TransactionContextInterface) 
 	// In a real application, you would iterate over all candidate IDs.
 	// From database like MongoDB Cloud (Atlas) or Some Source
 	// This example retrieves two hardcoded candidates.
-	candidateIDs := []string{"CAND001", "CAND002"} // Replace with dynamic retrieval
+
+	// It can have dynamic values
+	candidateIDs := []string{"CAND001", "CAND002"}
 
 	for _, candidateID := range candidateIDs {
 		candidateBytes, err := ctx.GetStub().GetState(candidateID)
@@ -133,16 +137,33 @@ func (s *SmartContract) GetResults(ctx contractapi.TransactionContextInterface) 
 
 		var candidate Candidate
 		json.Unmarshal(candidateBytes, &candidate)
-		results[candidate.Name] = candidate.Votes
+		results[candidate.ID] = candidate.Votes
 	}
 
 	return results, nil
 }
 
-func main() {
+func (s *SmartContract) GetResultByID(ctx contractapi.TransactionContextInterface, candidateID string) (map[string]int, error) {
+	results := make(map[string]int)
 
-	// CAD1: Sahal Pathan CAD2: Asim Pathan CAD3: Jay Pandya
+	candidateBytes, err := ctx.GetStub().GetState(candidateID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read candidate state: %v", err)
+	}
+	if candidateBytes == nil {
+		return nil, fmt.Errorf("candidate %s does not exist", candidateID)
+	}
+
+	var candidate Candidate
+	json.Unmarshal(candidateBytes, &candidate)
+	results[candidate.ID] = candidate.Votes
+
+	return results, nil
+}
+
+func main() {
 	chaincode, err := contractapi.NewChaincode(new(SmartContract))
+
 	if err != nil {
 		fmt.Printf("Error create e-voting chaincode: %v", err)
 		return

@@ -1,4 +1,4 @@
-module e_voting
+module evoting
 
 go 1.24.1
 

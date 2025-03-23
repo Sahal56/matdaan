@@ -1,5 +1,6 @@
-source ./set_env.sh
-# export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
+export PROJ_PATH=~/Hyperledger/matdaan
+export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=${PROJ_PATH}/hyperledger-fabric/fabric-samples/config
 
 # We can now install the chaincode on the Org2 peer.
 # Set the following environment variables to operate as the Org2 admin 
