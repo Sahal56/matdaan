@@ -33,6 +33,11 @@ go mod tidy
 go build # Build an executable
 ```
 
+# Deploy
+```sh
+network.sh deployCC -ccn e_voting -ccp ~/Hyperledger/matdaan/chaincode -ccv 1 -ccl go
+```
+
 ---
 **Stuff**
 ```md
