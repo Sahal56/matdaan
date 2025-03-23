@@ -1,4 +1,5 @@
-export MY_NETWORK=~/Hyperledger/fabric-samples/test-network
+source ./set_env.sh
+# export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
 
 # We can now install the chaincode on the Org2 peer.
 # Set the following environment variables to operate as the Org2 admin 

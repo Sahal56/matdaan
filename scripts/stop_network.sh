@@ -1,3 +1,3 @@
 # --------------------------------- Stop Test Network ---------------------------------------------------------------------------------------------------
-export HLF_PATH=~/Hyperledger
-${HLF_PATH}/fabric-samples/test-network/network.sh down
+export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
+${MY_NETWORK}/network.sh down

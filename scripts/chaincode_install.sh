@@ -2,7 +2,7 @@
 export CHAINCODE_PKG_NAME="e_voting"
 export CHAINCODE_PKG_ZIP=${CHAINCODE_PKG_NAME}.tar.gz
 export CHAINCODE_LANGUAGE="go"
-export CHANNEL_MAIN="channel-1"
+export CHANNEL_MAIN="mychannel"
 
 export PROJ_PATH=~/Hyperledger/matdaan
 
