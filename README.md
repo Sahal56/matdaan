@@ -1,5 +1,17 @@
 # **MATDAAN** : Blockchain based E-Voting System
 
+# TASK 1 Week
+Digital Identity
+Voter Authentication
+
+## Solution
+- SAML based Auth like Google, Facebook
+- Biometric Face Auth
+- MFA
+
+
+---
+
 <!-- Fabric v2.5.x is the current long-term support (LTS) release. -->
 
 ## **Download Hyperledger Fabric (Script)**
@@ -37,6 +49,66 @@ go build # Build an executable
 ```sh
 network.sh deployCC -ccn e_voting -ccp ~/Hyperledger/matdaan/chaincode -ccv 1 -ccl go
 ```
+
+## **Hyperledger Blockchain Explorer**
+
+```sh
+# prequisite node
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+nvm install 16.4.1
+source ~/.profile
+
+git clone https://github.com/hyperledger-labs/blockchain-explorer.git
+
+# Install PostgreSQL
+sudo apt-get install postgresql postgresql-contrib
+
+# Configure & set username & password : postgres
+cd blockchain-explorer/app
+nano explorerconfig.json
+
+# better use below
+export DATABASE_HOST=127.0.0.1 \
+export DATABASE_PORT=5432 \
+export DATABASE_DATABASE=fabricexplorer \
+export DATABASE_USERNAME=postgres \
+export DATABASE_PASSWD=postgres
+
+cd ../../
+cd blockchain-explorer/app/persistence/fabric/postgreSQL/
+chmod -R775 db/
+
+cd db/
+./createdb.sh
+
+
+
+cd ~/blockchain-explorer/app/platform/fabric/connection-profile/
+nano test-network.json
+nano test-network-ca.json
+# path > /home/ubuntu/Hyperledger/matdaan/hyperledger-fabric/fabric-samples/*
+
+cd blockchain-explorer/app/persistence/fabric/postgreSQL/db
+sudo -u postgres ./createdb.sh
+
+sudo -u postgres psql -c '\l'
+sudo -u postgres psql $DATABASE_DATABASE -c '\d'
+
+# Required for Ubuntu
+sudo apt-get install g++ build-essential
+
+# root of the repository : explorer
+./main.sh clean
+./main.sh install
+# might result into error ! Chill and relax
+
+# Bootup Mode
+nano ~/app/platform/fabric/config.json
+    # "bootMode": "ALL", OR CUSTOM
+    # "noOfBlocks": 0    OR 5 i.e. show latest 5 block
+
+```
+
 
 ---
 **Stuff**

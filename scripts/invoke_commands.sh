@@ -24,7 +24,7 @@ peer chaincode invoke \
 
 # CastVote
 ...
--c '{"Args":["CastVote", "VOT001" "CAND001"]}'
+-c '{"Args":["CastVote", "VOT001", "CAND001"]}'
 
 # GetResults
 ...
