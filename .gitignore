@@ -3,6 +3,7 @@
 *fabric-samples
 *blockchain-explorer
 *vendor
+hyperledger-fabric/install-fabric.sh
 
 *.gz
 *.tar
