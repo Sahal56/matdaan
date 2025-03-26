@@ -51,11 +51,14 @@ network.sh deployCC -ccn e_voting -ccp ~/Hyperledger/matdaan/chaincode -ccv 1 -c
 ```
 
 ## **Hyperledger Blockchain Explorer**
+referrences :
+    - [official](https://github.com/hyperledger-labs/blockchain-explorer?tab=readme-ov-file)
+    - [medium](https://abhibvp003.medium.com/hyperledger-explorer-setup-with-hyperledger-fabric-c65f99749a03)
 
 ```sh
 # prequisite node
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
-nvm install 16.4.1
+nvm install 14.1
 source ~/.profile
 
 git clone https://github.com/hyperledger-labs/blockchain-explorer.git
@@ -94,6 +97,18 @@ sudo -u postgres ./createdb.sh
 sudo -u postgres psql -c '\l'
 sudo -u postgres psql $DATABASE_DATABASE -c '\d'
 
+# Do this below step
+# sudo -u postgres psql
+# [sudo] password for ubuntu: 
+# psql (16.8 (Ubuntu 16.8-0ubuntu0.24.04.1))
+# Type "help" for help.
+
+# postgres=# ALTER USER postgres WITH PASSWORD 'postgres';
+# ALTER ROLE
+# postgres=# \q
+# sudo service postgresql restart
+
+
 # Required for Ubuntu
 sudo apt-get install g++ build-essential
 
@@ -106,6 +121,13 @@ sudo apt-get install g++ build-essential
 nano ~/app/platform/fabric/config.json
     # "bootMode": "ALL", OR CUSTOM
     # "noOfBlocks": 0    OR 5 i.e. show latest 5 block
+
+cd ~/blockchain-explorer/
+./start.sh
+
+# Go at http://localhost:8080/#/
+username : exploreradmin
+password : exploreradminpw
 
 ```
 
