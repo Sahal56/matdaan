@@ -75,55 +75,6 @@ func (s *SmartContract) RegisterVoter(ctx contractapi.TransactionContextInterfac
 	return nil
 }
 
-func (s *SmartContract) CastVoteByCandidate(ctx contractapi.TransactionContextInterface, sending_candidateID string, receiving_candidateID string) error {
-	// Candidate can also vote.
-	sending_candidateBytes, err := ctx.GetStub().GetState(sending_candidateID)
-	if err != nil {
-		return fmt.Errorf("failed to read candidate state: %v", err)
-	}
-	if sending_candidateBytes == nil {
-		return fmt.Errorf("candidate %s does not exist", sending_candidateID)
-	}
-	var sending_candidate Candidate
-	json.Unmarshal(sending_candidateBytes, &sending_candidate)
-
-	if sending_candidateID == receiving_candidateID {
-		// candidate voting to him/herself
-		sending_candidate.Votes = sending_candidate.Votes + 1
-
-	} else {
-		receiving_candidateBytes, err := ctx.GetStub().GetState(receiving_candidateID)
-		if err != nil {
-			return fmt.Errorf("failed to read candidate state: %v", err)
-		}
-		if receiving_candidateBytes == nil {
-			return fmt.Errorf("candidate %s does not exist", receiving_candidateID)
-		}
-		var receiving_candidate Candidate
-		json.Unmarshal(receiving_candidateBytes, &receiving_candidate)
-
-		if sending_candidate.Constituency != receiving_candidate.Constituency {
-			return fmt.Errorf("voter:%s is not allowed to vote for candidate of another constituency", receiving_candidateID)
-		}
-
-		receiving_candidate.Votes = receiving_candidate.Votes + 1
-		receiving_candidateBytes, _ = json.Marshal(receiving_candidate)
-		err = ctx.GetStub().PutState(receiving_candidateID, receiving_candidateBytes)
-		if err != nil {
-			return fmt.Errorf("failed to update candidate votes: %v", err)
-		}
-	}
-
-	sending_candidate.HasVoted = true
-	sending_candidateBytes, _ = json.Marshal(sending_candidate)
-	err = ctx.GetStub().PutState(sending_candidateID, sending_candidateBytes)
-	if err != nil {
-		return fmt.Errorf("failed to update voter status: %v", err)
-	}
-
-	return nil
-}
-
 func (s *SmartContract) CastVote(ctx contractapi.TransactionContextInterface, voterID string, candidateID string) error {
 	voterBytes, err := ctx.GetStub().GetState(voterID)
 	if err != nil {
@@ -168,6 +119,55 @@ func (s *SmartContract) CastVote(ctx contractapi.TransactionContextInterface, vo
 	voter.HasVoted = true
 	voterBytes, _ = json.Marshal(voter)
 	err = ctx.GetStub().PutState(voterID, voterBytes)
+	if err != nil {
+		return fmt.Errorf("failed to update voter status: %v", err)
+	}
+
+	return nil
+}
+
+func (s *SmartContract) CastVoteByCandidate(ctx contractapi.TransactionContextInterface, sending_candidateID string, receiving_candidateID string) error {
+	// Candidate can also vote.
+	sending_candidateBytes, err := ctx.GetStub().GetState(sending_candidateID)
+	if err != nil {
+		return fmt.Errorf("failed to read candidate state: %v", err)
+	}
+	if sending_candidateBytes == nil {
+		return fmt.Errorf("candidate %s does not exist", sending_candidateID)
+	}
+	var sending_candidate Candidate
+	json.Unmarshal(sending_candidateBytes, &sending_candidate)
+
+	if sending_candidateID == receiving_candidateID {
+		// candidate voting to him/herself
+		sending_candidate.Votes = sending_candidate.Votes + 1
+
+	} else {
+		receiving_candidateBytes, err := ctx.GetStub().GetState(receiving_candidateID)
+		if err != nil {
+			return fmt.Errorf("failed to read candidate state: %v", err)
+		}
+		if receiving_candidateBytes == nil {
+			return fmt.Errorf("candidate %s does not exist", receiving_candidateID)
+		}
+		var receiving_candidate Candidate
+		json.Unmarshal(receiving_candidateBytes, &receiving_candidate)
+
+		if sending_candidate.Constituency != receiving_candidate.Constituency {
+			return fmt.Errorf("voter:%s is not allowed to vote for candidate of another constituency", receiving_candidateID)
+		}
+
+		receiving_candidate.Votes = receiving_candidate.Votes + 1
+		receiving_candidateBytes, _ = json.Marshal(receiving_candidate)
+		err = ctx.GetStub().PutState(receiving_candidateID, receiving_candidateBytes)
+		if err != nil {
+			return fmt.Errorf("failed to update candidate votes: %v", err)
+		}
+	}
+
+	sending_candidate.HasVoted = true
+	sending_candidateBytes, _ = json.Marshal(sending_candidate)
+	err = ctx.GetStub().PutState(sending_candidateID, sending_candidateBytes)
 	if err != nil {
 		return fmt.Errorf("failed to update voter status: %v", err)
 	}

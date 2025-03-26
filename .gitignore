@@ -7,3 +7,6 @@ hyperledger-fabric/install-fabric.sh
 
 *.gz
 *.tar
+
+*caliper-testing
+*fabric-benchmarks

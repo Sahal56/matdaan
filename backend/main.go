@@ -96,15 +96,17 @@ func main() {
 	candidate.ID = "CAND001"
 	candidate.Constituency = "Anand"
 
-	initLedger(contract, "mongodb")
+	// initLedger(contract, "mongodb")
 	// registerVoter(contract, voter)
 	// castVoteAsync(contract, voter.ID, candidate.ID)
 
 	var sending_candidate Candidate
 	var receiving_candidate Candidate
 
-	sending_candidate.ID, receiving_candidate.ID = "CAND001", "CAND001"
+	sending_candidate.ID = "CAND001"
+	receiving_candidate.ID = "CAND001"
 	castVoteByCandidateAsync(contract, sending_candidate.ID, receiving_candidate.ID)
+	// fmt.Printf("%s : %s", sending_candidate.ID, receiving_candidate.ID)
 
 	// sending_candidate.ID, receiving_candidate.ID = "CAND001", "CAND002"
 	// castVoteByCandidateAsync(contract, sending_candidate.ID, receiving_candidate.ID)
@@ -233,9 +235,6 @@ func registerVoter(contract *client.Contract, voter Voter) {
 func castVoteAsync(contract *client.Contract, voterID string, candidateID string) {
 	fmt.Printf("\n--> Async Submit Transaction: CastVote, cast vote to specified candidate")
 
-	// var voterID, candidateID string
-	// fmt.Scanln(&voterID, &candidateID)
-
 	submitResult, commit, err := contract.SubmitAsync("CastVote", client.WithArguments(voterID, candidateID))
 	if err != nil {
 		panic(fmt.Errorf("failed to submit transaction asynchronously: %w", err))
@@ -257,10 +256,7 @@ func castVoteAsync(contract *client.Contract, voterID string, candidateID string
 func castVoteByCandidateAsync(contract *client.Contract, sending_candidateID string, receiving_candidateID string) {
 	fmt.Printf("\n--> Async Submit Transaction: CastVote, cast vote to specified candidate")
 
-	// var voterID, candidateID string
-	// fmt.Scanln(&voterID, &candidateID)
-
-	submitResult, commit, err := contract.SubmitAsync("CastVote", client.WithArguments(sending_candidateID, receiving_candidateID))
+	submitResult, commit, err := contract.SubmitAsync("CastVoteByCandidate", client.WithArguments(sending_candidateID, receiving_candidateID))
 	if err != nil {
 		panic(fmt.Errorf("failed to submit transaction asynchronously: %w", err))
 	}
