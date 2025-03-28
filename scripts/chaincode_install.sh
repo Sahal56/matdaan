@@ -16,7 +16,23 @@ export CHANNEL_MAIN="mychannel"
 
 # --------------------------------- Start Test Network ---------------------------------------------------------------------------------------------------
 ${MY_NETWORK}/network.sh down
-${MY_NETWORK}/network.sh up createChannel -ca -c ${CHANNEL_MAIN} 
+echo "1 : With Certificate Authority"
+echo "2 : Without CA | CryptoGen?"
+
+read -p "Input: " input
+
+case $input in
+    1)
+        ${MY_NETWORK}/network.sh up createChannel -ca -c ${CHANNEL_MAIN}
+        ;;
+    2)
+        ${MY_NETWORK}/network.sh up createChannel -c ${CHANNEL_MAIN}
+        ;;
+    *)
+        echo "Invalid input. Please enter a number between 1 or 2."
+        exit 1
+        ;;
+esac
 #  To add Certificate Authority add above: -ca
 
 
