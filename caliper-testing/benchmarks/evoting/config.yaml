@@ -1,0 +1,31 @@
+test:
+  workers:
+    number: 2
+  rounds:
+    - label: Register Voter
+      txNumber: 1000
+      rateControl:
+          type: fixed-load
+          opts:
+            transactionLoad: 5
+      workload:
+        module: benchmarks/evoting/workload/registerVoter.js
+    - label: Cast Vote
+      txNumber: 1000
+      rateControl:
+          type: fixed-load
+          opts:
+            transactionLoad: 5
+      workload:
+        module: benchmarks/evoting/workload/castVote.js       
+    - label: Get Results
+      txDuration: 30
+      rateControl:
+          type: fixed-load
+          opts:
+            transactionLoad: 5
+      workload:
+        module: benchmarks/evoting/workload/getResults.js
+
+# As of know no arguments
+# refer to caliper-benchmarks/benchmarks/samples/fabric/fabcar/config.yaml
