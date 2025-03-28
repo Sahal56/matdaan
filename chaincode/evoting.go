@@ -39,12 +39,12 @@ type Candidate struct {
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
 	// statically giving input
 	candidates := []Candidate{
-		{ID: "CAND001", Constituency: "Anand", Votes: 0},
-		{ID: "CAND002", Constituency: "Anand", Votes: 0},
-		{ID: "CAND003", Constituency: "Anand", Votes: 0},
-		{ID: "CAND004", Constituency: "Vadodara", Votes: 0},
-		{ID: "CAND005", Constituency: "Vadodara", Votes: 0},
-		{ID: "CAND006", Constituency: "Vadodara", Votes: 0},
+		{ID: "CAND0001", Constituency: "Anand", Votes: 0},
+		{ID: "CAND0002", Constituency: "Anand", Votes: 0},
+		{ID: "CAND0003", Constituency: "Anand", Votes: 0},
+		{ID: "CAND0004", Constituency: "Vadodara", Votes: 0},
+		{ID: "CAND0005", Constituency: "Vadodara", Votes: 0},
+		{ID: "CAND0006", Constituency: "Vadodara", Votes: 0},
 	}
 
 	// Dynamically Candidates can be filled based on particular channel's peer nodes based on constituency
