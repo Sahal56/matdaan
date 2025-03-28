@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-contract-api-go/v2/contractapi"
@@ -47,6 +48,9 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 		{ID: "CAND0006", Constituency: "Vadodara", Votes: 0},
 	}
 
+	// Counting the number of candidates
+	numCandidates := len(candidates)
+
 	// Dynamically Candidates can be filled based on particular channel's peer nodes based on constituency
 
 	for _, candidate := range candidates {
@@ -56,6 +60,13 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 			return fmt.Errorf("failed to put state for %s: %v", candidate.ID, err)
 		}
 	}
+
+	// storing numCandidates
+	err := ctx.GetStub().PutState("CANDIDATE_COUNT", []byte(strconv.Itoa(numCandidates)))
+	if err != nil {
+		return fmt.Errorf("failed to store candidate count: %v", err)
+	}
+
 	return nil
 }
 
@@ -191,22 +202,38 @@ func (s *SmartContract) GetResults(ctx contractapi.TransactionContextInterface) 
 	// In a real application, you would iterate over all candidate IDs.
 	// From database like MongoDB Cloud (Atlas) or Some Source
 	// This example retrieves two hardcoded candidates.
-
 	// It can have dynamic values
-	candidateIDs := []string{"CAND001", "CAND002"} // as of know only 2 values
+	// candidateIDs := []string{"CAND001", "CAND002"} // as of know only 2 values
 
-	for _, candidateID := range candidateIDs {
+	// Retrieve candidate count from the ledger (if stored)
+	countBytes, err := ctx.GetStub().GetState("CANDIDATE_COUNT")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read candidate count: %v", err)
+	}
+
+	if countBytes == nil {
+		return nil, fmt.Errorf("failed: count isn't stored")
+	}
+	count, err := strconv.Atoi(string(countBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert count: %v", err)
+	}
+
+	// Iterate based on the stored count (assuming consecutive IDs)
+	for i := 1; i <= count; i++ {
+		candidateID := fmt.Sprintf("CAND%04d", i)
 		candidateBytes, err := ctx.GetStub().GetState(candidateID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read candidate state: %v", err)
+			return nil, fmt.Errorf("failed to read candidate state for %s: %v", candidateID, err)
 		}
 		if candidateBytes == nil {
-			return nil, fmt.Errorf("candidate %s does not exist", candidateID)
+			continue // Skip if candidate doesn't exist (handles gaps)
 		}
 
 		var candidate Candidate
 		json.Unmarshal(candidateBytes, &candidate)
 		results[candidate.ID] = candidate.Votes
+
 	}
 
 	return results, nil
