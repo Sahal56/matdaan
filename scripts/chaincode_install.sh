@@ -3,7 +3,7 @@ export PROJ_PATH=~/Hyperledger/matdaan
 export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
 export FABRIC_CFG_PATH=${PROJ_PATH}/hyperledger-fabric/fabric-samples/config
 
-export CHAINCODE_PATH=~/Hyperledger/matdaan/chaincode
+export CHAINCODE_PATH=${PROJ_PATH}/chaincode
 export CHAINCODE_PKG_NAME="evoting"
 export CHAINCODE_PKG_ZIP=${CHAINCODE_PKG_NAME}.tar.gz
 export CHAINCODE_LANGUAGE="go"

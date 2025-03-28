@@ -4,8 +4,9 @@
 
 # Always we have to use context of Peer 1 or 2
 export PROJ_PATH=~/Hyperledger/matdaan
-source ${PROJ_PATH}/scripts/org1.sh
+export FABRIC_CFG_PATH=${PROJ_PATH}/hyperledger-fabric/fabric-samples/config
 export CHAINCODE_PKG_NAME="evoting"
+export CHANNEL_MAIN="mychannel"
 
 export CA_FILE=${MY_NETWORK}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 export PEER_1_TLS_FILES="${MY_NETWORK}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt"

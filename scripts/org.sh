@@ -4,6 +4,8 @@
 
 # Always we have to use context of Peer 1 or 2
 export PROJ_PATH=~/Hyperledger/matdaan
+export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
+export FABRIC_CFG_PATH=${PROJ_PATH}/hyperledger-fabric/fabric-samples/config
 source ${PROJ_PATH}/scripts/org1.sh
 export CHAINCODE_PKG_NAME="evoting"
 
