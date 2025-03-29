@@ -11,14 +11,12 @@ Versions:
 
 ```sh
 nvm install 18.19 #use nvm for managing node/npm
+nvm use 18.19
 ```
 
 > NOTE:
 >  - If you are using fabric 2.4 or higher then use below to bind with the new fabric node sdk which uses the new peer gateway service.
 >  - npx caliper bind --caliper-bind-sut fabric:2.4
-
-
-</details>
 
 > for gloabal use/insatllation (-g)
 ```sh
@@ -30,13 +28,18 @@ user@ubuntu:~$ caliper launch manager \
     --caliper-networkconfig networks/fabric/test-network.yaml
 ```
 
+</details>
+
+
 ```sh
+export CALIPER_PATH=${HOME}/Hyperledger/matdaan/caliper-testing
+
 # Clone Offical Caliper Benchmark repo for referrence
-# I have kept that in .gitignore. so it wont appear in directory.
+# I have kept that in .gitignore so it wont appear in directory.
 # But one should download it !!!
 # git clone https://github.com/hyperledger/caliper-benchmarks
 
-cd caliper-benchmarks
+cd ${CALIPER_PATH}
 
 # we are installing locally | for global: use -g
 npm install --only=prod @hyperledger/caliper-cli --omit=dev
@@ -50,6 +53,7 @@ source ./setup_network.sh
 #   - benchmarks/evoting/*
 #   - networks/test-network.yaml
 
+cd ${CALIPER_PATH} # Make sure we are here
 # Start Caliper
 npx caliper launch manager \
 --caliper-workspace ./ \
