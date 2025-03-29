@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Set Environment Variables
 export PROJ_PATH=~/Hyperledger/matdaan
 export MY_NETWORK=${PROJ_PATH}/hyperledger-fabric/fabric-samples/test-network
