@@ -34,7 +34,7 @@ services:
     environment:
       - DATABASE_HOST=explorerdb.mynetwork.com
       - DATABASE_DATABASE=fabricexplorer
-      - DATABASE_USERNAME=postgres
+      - DATABASE_USERNAME=hppoc
       - DATABASE_PASSWD=password
       - LOG_LEVEL_APP=info
       - LOG_LEVEL_DB=info
