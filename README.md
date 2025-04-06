@@ -1,14 +1,12 @@
 # **MATDAAN** : Blockchain based E-Voting System
 
-# TASK 1 Week
-Digital Identity
-Voter Authentication
 
-## Solution
-- SAML based Auth like Google, Facebook
-- Biometric Face Auth
-- MFA
-
+To run Projects
+```sh
+source ./scripts/chaincode_install.sh # Chaincode
+cd frontend/ && python3 -m http.server 8080 # Frontend
+cd backend/ && go run main.go # Backend
+```
 
 ---
 
