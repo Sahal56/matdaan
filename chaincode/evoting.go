@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
-	// "github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-contract-api-go/v2/contractapi"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 /*
@@ -31,28 +35,44 @@ type Voter struct {
 }
 
 type Candidate struct {
-	ID           string `json:"ID"`
+	ID           string `bson:"_id,omitempty" json:"ID"`
 	Constituency string `json:"Constituency"`
 	Votes        int    `json:"Votes"`
 	HasVoted     bool   `json:"HasVoted"` // new logic: candidates can also vote
 }
 
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-	// statically giving input
-	candidates := []Candidate{
-		{ID: "CAND0001", Constituency: "Anand", Votes: 0},
-		{ID: "CAND0002", Constituency: "Anand", Votes: 0},
-		{ID: "CAND0003", Constituency: "Anand", Votes: 0},
-		{ID: "CAND0004", Constituency: "Vadodara", Votes: 0},
-		{ID: "CAND0005", Constituency: "Vadodara", Votes: 0},
-		{ID: "CAND0006", Constituency: "Vadodara", Votes: 0},
+	client, err := mongo.Connect(options.Client().ApplyURI("mongodb://host.docker.internal:27017"))
+	if err != nil {
+		return fmt.Errorf("failed to connect to MongoDB: %v", err)
+	}
+	defer client.Disconnect(context.TODO())
+
+	collection := client.Database("evotingDB").Collection("candidates")
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		return fmt.Errorf("failed to fetch candidates from DB: %v", err)
+	}
+	defer cursor.Close(context.TODO())
+
+	var candidates []Candidate
+	for cursor.Next(context.TODO()) {
+		var candidate Candidate
+		err := cursor.Decode(&candidate)
+		if err != nil {
+			return fmt.Errorf("failed to decode candidate: %v", err)
+		}
+		candidates = append(candidates, candidate)
 	}
 
-	// Counting the number of candidates
+	if err := cursor.Err(); err != nil {
+		return fmt.Errorf("error iterating cursor: %v", err)
+	}
+
 	numCandidates := len(candidates)
 
-	// Dynamically Candidates can be filled based on particular channel's peer nodes based on constituency
-
+	// Store candidates dynamically
 	for _, candidate := range candidates {
 		candidateBytes, _ := json.Marshal(candidate)
 		err := ctx.GetStub().PutState(candidate.ID, candidateBytes)
@@ -61,8 +81,8 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 		}
 	}
 
-	// storing numCandidates
-	err := ctx.GetStub().PutState("CANDIDATE_COUNT", []byte(strconv.Itoa(numCandidates)))
+	// Store candidate count
+	err = ctx.GetStub().PutState("CANDIDATE_COUNT", []byte(strconv.Itoa(numCandidates)))
 	if err != nil {
 		return fmt.Errorf("failed to store candidate count: %v", err)
 	}
@@ -199,12 +219,6 @@ Get Result of all constituency
 func (s *SmartContract) GetResults(ctx contractapi.TransactionContextInterface) (map[string]int, error) {
 	results := make(map[string]int)
 
-	// In a real application, you would iterate over all candidate IDs.
-	// From database like MongoDB Cloud (Atlas) or Some Source
-	// This example retrieves two hardcoded candidates.
-	// It can have dynamic values
-	// candidateIDs := []string{"CAND001", "CAND002"} // as of know only 2 values
-
 	// Retrieve candidate count from the ledger (if stored)
 	countBytes, err := ctx.GetStub().GetState("CANDIDATE_COUNT")
 	if err != nil {
@@ -255,6 +269,62 @@ func (s *SmartContract) GetResultByID(ctx contractapi.TransactionContextInterfac
 	results[candidate.ID] = candidate.Votes
 
 	return results, nil
+}
+
+// Get Results Constituency wise
+func (s *SmartContract) GetResultByVoterID(ctx contractapi.TransactionContextInterface, voterID string) ([]*Candidate, error) {
+	// Step 1: Get voter from ledger
+	voterBytes, err := ctx.GetStub().GetState(voterID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read voter state: %v", err)
+	}
+	if voterBytes == nil {
+		return nil, fmt.Errorf("voter not found with ID %s", voterID)
+	}
+
+	var voter Voter
+	err = json.Unmarshal(voterBytes, &voter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal voter: %v", err)
+	}
+
+	// Step 2: Get candidate count
+	countBytes, err := ctx.GetStub().GetState("CANDIDATE_COUNT")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read candidate count: %v", err)
+	}
+	if countBytes == nil {
+		return nil, fmt.Errorf("candidate count not found")
+	}
+	count, err := strconv.Atoi(string(countBytes))
+	if err != nil {
+		return nil, fmt.Errorf("invalid candidate count: %v", err)
+	}
+
+	// Step 3: Loop and collect candidates with matching constituency
+	var candidates []*Candidate
+	for i := 1; i <= count; i++ {
+		candidateID := fmt.Sprintf("CAND%04d", i)
+		candidateBytes, err := ctx.GetStub().GetState(candidateID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read candidate %s: %v", candidateID, err)
+		}
+		if candidateBytes == nil {
+			continue
+		}
+
+		var candidate Candidate
+		err = json.Unmarshal(candidateBytes, &candidate)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal candidate %s: %v", candidateID, err)
+		}
+
+		if candidate.Constituency == voter.Constituency {
+			candidates = append(candidates, &candidate)
+		}
+	}
+
+	return candidates, nil
 }
 
 func main() {
