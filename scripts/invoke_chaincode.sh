@@ -20,24 +20,31 @@ echo "2 : RegisterVoter"
 echo "3 : CastVote"
 echo "4 : CastVoteByCandidate"
 echo "5 : GetResults"
+echo "6 : GetCandidatesByVoter"
 
 read -p "Input: " input
+# votID="VOT0001"
 
 case $input in
     1)
         QUERY='{"Args":["InitLedger"]}'
         ;;
     2)
-        QUERY='{"Args":["RegisterVoter","VOT001","Anand"]}'
+        read -p "VoterID: " votID 
+        QUERY='{"Args":["RegisterVoter","'"$votID"'","Anand"]}'
         ;;
     3)
-        QUERY='{"Args":["CastVote","VOT001","CAND001"]}'
+        read -p "VoterID: " votID
+        QUERY='{"Args":["CastVote","'"$votID"'","CAND0001"]}'
         ;;
     4)
-        QUERY='{"Args":["CastVoteByCandidate","CAND001","CAND001"]}'
+        QUERY='{"Args":["CastVoteByCandidate","CAND0001","CAND0001"]}'
         ;;
     5)
         QUERY='{"Args":["GetResults"]}'
+        ;;
+    6)
+        QUERY='{"Args":["GetResultByVoterID", "VOT0001"]}'
         ;;
     *)
         echo "Invalid input. Please enter a number between 1 and 5."
@@ -56,23 +63,4 @@ peer chaincode invoke \
   -n ${CHAINCODE_PKG_NAME} \
   --peerAddresses localhost:7051 --tlsRootCertFiles ${PEER_1_TLS_FILES} \
   --peerAddresses localhost:9051 --tlsRootCertFiles ${PEER_2_TLS_FILES} \
-  -c ${QUERY}
-
-
-# # RegisterVoter
-# ...
-#   -c '{"Args":["RegisterVoter","VOT001", "Anand"]}'
-
-# # CastVoteByCandidate
-# ...
-#   -c '{"Args":["CastVoteByCandidate", "CAND001", "CAND001"]}'
-
-# # CastVote
-# ...
-#   -c '{"Args":["CastVote", "VOT001", "CAND001"]}'
-
-
-
-# # GetResults
-# ...
-#   -c '{"Args":["GetResults"]}'
+  -c "$QUERY"
