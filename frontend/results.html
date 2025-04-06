@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>Matdaan - Results</title>
+      <link rel="stylesheet" href="./style.css">
+   </head>
+   <body>
+      <nav class="navbar">
+         <div class="logo">Matdaan</div>
+         <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="register.html">Register</a>
+            <a href="login.html">Login</a>
+            <a href="vote.html">Cast Vote</a>
+            <a href="results.html">Results</a>
+         </div>
+      </nav>
+      <div class="container results-container">
+         <h2 class="constituency-label" id="constituencyLabel"></h2>
+         <div id="resultsList" class="results-list"></div>
+      </div>
+      <script>
+         const backend_endpoint = "http://localhost:5000";
+         
+         window.addEventListener('DOMContentLoaded', async () => {
+           try {
+             const authRes = await fetch(backend_endpoint + '/api/me', {
+               credentials: 'include', // sends the cookie with request
+               cache: 'no-store'
+         });
+             if (authRes.status !== 200) {
+               alert('Please login to view results.');
+               return window.location.href = "./login.html";
+             }
+         
+             const authData = await authRes.json();
+             const voterID = authData.voterID;
+         
+           // const voterID = "VOT0001";
+         
+             const res = await fetch(backend_endpoint + '/api/resultsByVoter', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ voterID })
+             });
+         
+             const data = await res.json();
+             const list = document.getElementById('resultsList');
+             const label = document.getElementById('constituencyLabel');
+             list.innerHTML = '';
+         
+             if (!data.results || data.results.length === 0) {
+               list.innerHTML = "<p>No results available for your constituency.</p>";
+               return;
+             }
+         
+             // Display constituency label at top (assumes all candidates are from same constituency)
+             label.textContent = "Constituency: " + data.results[0].Constituency;
+         
+             // Render each candidate result
+             data.results.forEach(candidate => {
+               const div = document.createElement('div');
+               div.className = "result-item";
+               div.innerHTML = `
+         <div class="result-name">${candidate.Name}</div>
+         <div class="result-votes">${candidate.Votes} votes</div>
+         `;
+         
+               list.appendChild(div);
+             });
+         
+           } catch (err) {
+             console.error("Error loading results:", err);
+             alert("Failed to load results. Please try again later.");
+           }
+         });
+      </script>
+   </body>
+</html>

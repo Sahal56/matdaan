@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>Matdaan - Vote</title>
+      <link rel="stylesheet" href="./style.css">
+   </head>
+   <body>
+      <nav class="navbar">
+         <div class="logo">Matdaan</div>
+         <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="register.html">Register</a>
+            <a href="login.html">Login</a>
+            <a href="vote.html">Cast Vote</a>
+            <a href="results.html">Results</a>
+         </div>
+      </nav>
+      <div class="container">
+         <h2>Cast Your Vote</h2>
+         <form id="voteForm">
+            <div id="candidatesList" class="candidate-table-container"></div>
+            <button type="submit">Submit Vote</button>
+         </form>
+      </div>
+      <script>
+         const backend_endpoint = "http://localhost:5000";
+         
+         window.addEventListener('DOMContentLoaded', async () => {
+           try {
+              // Check if user is authenticated
+              const authRes = await fetch(backend_endpoint + '/api/me', {
+               credentials: 'include', // sends the cookie with request
+               cache: 'no-store'
+         });
+             if (authRes.status !== 200) {
+               alert('Please login to view results.');
+               return window.location.href = "./login.html";
+             }
+         
+             const authData = await authRes.json();
+             const voterID = authData.voterID;
+             
+             
+             // const voterID = "VOT0023";
+         
+             if (!voterID) {
+               alert("Invalid session. Please log in again.");
+               return window.location.href = "./login.html";
+             }
+         
+             // Fetch candidate list
+             const candidateRes = await fetch(backend_endpoint + '/api/candidates', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ voterID })
+             });
+         
+             if (candidateRes.status !== 200) {
+               alert("Failed to load candidates.");
+               return;
+             }
+         
+             const candidateData = await candidateRes.json();
+             const list = document.getElementById('candidatesList');
+         
+             // Create table
+             const table = document.createElement('table');
+             table.classList.add('candidate-table');
+         
+             const thead = document.createElement('thead');
+             thead.innerHTML = `
+               <tr>
+                 <th>Select</th>
+                 <th>Name</th>
+                 <th>Constituency</th>
+               </tr>
+             `;
+             table.appendChild(thead);
+         
+             const tbody = document.createElement('tbody');
+             candidateData.candidates.forEach(candidate => {
+               const row = document.createElement('tr');
+               row.innerHTML = `
+                 <td><input type="radio" name="candidate" value="${candidate.ID}"></td>
+                 <td>${candidate.Name}</td>
+                 <td>${candidate.Constituency}</td>
+               `;
+               tbody.appendChild(row);
+             });
+         
+             table.appendChild(tbody);
+             list.appendChild(table);
+         
+             // Handle vote submission
+             document.getElementById('voteForm').addEventListener('submit', async (e) => {
+               e.preventDefault();
+               const candidateID = document.querySelector('input[name="candidate"]:checked')?.value;
+         
+               if (!candidateID) {
+                 alert("Please select a candidate.");
+                 return;
+               }
+         
+               try {
+                 const response = await fetch(backend_endpoint + '/api/vote', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({ voterID, candidateID })
+                 });
+         
+                 const result = await response.json();
+                 if (response.ok) {
+                   alert(result.message || "Vote submitted successfully!");
+                   window.location.href = "./results.html";
+                 } else {
+                   alert(result.error || "Vote failed.");
+                 }
+               } catch (err) {
+                 alert("Failed to submit vote.");
+                 console.error(err);
+               }
+             });
+         
+           } catch (err) {
+             console.error("Error loading vote page:", err);
+             window.location.href = "./login.html";
+           }
+         });
+      </script>
+   </body>
+</html>
