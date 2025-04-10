@@ -91,18 +91,32 @@ func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) 
 }
 
 func (s *SmartContract) RegisterVoter(ctx contractapi.TransactionContextInterface, voterID string, constituency string) error {
+	// Check if voter already exists
+	existingVoter, err := ctx.GetStub().GetState(voterID)
+	if err != nil {
+		return fmt.Errorf("failed to check existing voter: %v", err)
+	}
+	if existingVoter != nil {
+		return fmt.Errorf("voter with ID %s already exists", voterID)
+	}
 
+	// Create new voter
 	voter := Voter{
 		ID:           voterID,
 		Constituency: constituency,
 		HasVoted:     false,
 	}
 
-	voterBytes, _ := json.Marshal(voter)
-	err := ctx.GetStub().PutState(voterID, voterBytes)
+	voterBytes, err := json.Marshal(voter)
+	if err != nil {
+		return fmt.Errorf("failed to marshal voter: %v", err)
+	}
+
+	err = ctx.GetStub().PutState(voterID, voterBytes)
 	if err != nil {
 		return fmt.Errorf("failed to register voter %s: %v", voterID, err)
 	}
+
 	return nil
 }
 
