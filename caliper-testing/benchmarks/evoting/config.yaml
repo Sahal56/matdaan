@@ -3,19 +3,19 @@ test:
     number: 2
   rounds:
     - label: Register Voter
-      txNumber: 1000
+      txNumber: 100
       rateControl:
           type: fixed-load
           opts:
-            transactionLoad: 5
+            transactionLoad: 20
       workload:
         module: benchmarks/evoting/workload/registerVoter.js
     - label: Cast Vote
-      txNumber: 1000
+      txNumber: 50  # each of 2 workers will send 50 = 100 total votes
       rateControl:
           type: fixed-load
           opts:
-            transactionLoad: 5
+            transactionLoad: 10
       workload:
         module: benchmarks/evoting/workload/castVote.js       
     - label: Get Results

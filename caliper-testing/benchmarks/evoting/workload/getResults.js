@@ -47,7 +47,7 @@ class GetResultsWorkload extends WorkloadModuleBase {
 
         try {
             const result = await this.sutAdapter.sendRequests(request);
-            console.log(`Transaction result: ${JSON.stringify(result)}`);
+            // console.log(`Transaction result: ${JSON.stringify(result)}`);
         } catch (error) {
             console.error(`Failed to submit transaction: ${error.message}`);
         }

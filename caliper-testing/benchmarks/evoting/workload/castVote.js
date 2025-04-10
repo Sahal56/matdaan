@@ -3,68 +3,63 @@
 const { WorkloadModuleBase } = require('@hyperledger/caliper-core');
 
 class CastVoteWorkload extends WorkloadModuleBase {
-
-    /**
-     * Initializes the workload module instance.
-     */
-
     constructor() {
         super();
         this.txIndex = 0;
-        // assuming we are voting to this only
         this.candidateID = 'CAND0001';
+        this.voterIDs = [];
     }
 
-    /**
-     * Initialize the workload module with the given parameters.
-     * @param {number} workerIndex The 0-based index of the worker instantiating the workload module.
-     * @param {number} totalWorkers The total number of workers participating in the round.
-     * @param {number} roundIndex The 0-based index of the currently executing round.
-     * @param {Object} roundArguments The user-provided arguments for the round from the benchmark configuration file.
-     * @param {BlockchainInterface} sutAdapter The adapter of the underlying SUT.
-     * @param {Object} sutContext The custom context object provided by the SUT adapter.
-     * @async
-     */
-    
     async initializeWorkloadModule(workerIndex, totalWorkers, roundIndex, roundArguments, sutAdapter, sutContext) {
         await super.initializeWorkloadModule(workerIndex, totalWorkers, roundIndex, roundArguments, sutAdapter, sutContext);
-        // this.startingKey = 'Client' + this.workerIndex + '_CAR' + this.roundArguments.startKey;
-        // this.endingKey = 'Client' + this.workerIndex + '_CAR' + this.roundArguments.endKey;
-        console.log(`Initializing workload module for worker ${workerIndex}`);
+        console.log(`Initializing workload module for worker ${workerIndex} of ${totalWorkers}`);
+
+        // Optional wait time to ensure registration completes | 20s delay
+        await new Promise(resolve => setTimeout(resolve, 10000));
+
+        const totalVoters = 100;
+        const votersPerWorker = Math.floor(totalVoters / totalWorkers);
+        const remainder = totalVoters % totalWorkers;
+
+        // Account for uneven division
+        let start = workerIndex * votersPerWorker + Math.min(workerIndex, remainder) + 1;
+        let end = start + votersPerWorker - 1;
+        if (workerIndex < remainder) {
+            end += 1;
+        }
+
+        for (let i = start; i <= end; i++) {
+            this.voterIDs.push(`VOT${String(i).padStart(4, '0')}`);
+        }
+
+        console.log(`[CastVote][Worker ${workerIndex}] Assigned ${this.voterIDs.length} voters: ${this.voterIDs.join(', ')}`);
     }
 
-    /**
-     * Assemble TXs for the round.
-     * @return {Promise<TxStatus[]>}
-     */
-
     async submitTransaction() {
-        this.txIndex++;
-        // const voterID = `VOT${Math.floor(Math.random() * 10000)}`;
-        const voterID =  `VOT${String(this.txIndex).padStart(3, '0')}`;
-        // const candidateID = 'CAND0001';
+        // await new Promise(resolve => setTimeout(resolve, 10));  // small backoff
 
-        const request ={
+        if (this.txIndex >= this.voterIDs.length) {
+            return;
+        }
+
+        const voterID = this.voterIDs[this.txIndex];
+        this.txIndex++;
+
+        const request = {
             contractId: 'evoting',
             contractFunction: 'CastVote',
             invokerIdentity: 'User1',
             contractArguments: [voterID, this.candidateID],
-            readOnly: false  // Since this is a write operation
-        }
+            readOnly: false
+        };
 
         try {
-            const result = await this.sutAdapter.sendRequests(request);
-            console.log(`Transaction result: ${JSON.stringify(result)}`);
+            await this.sutAdapter.sendRequests(request);
         } catch (error) {
-            console.error(`Failed to submit transaction: ${error.message}`);
+            console.error(`Failed to cast vote for ${voterID}: ${error.message}`);
         }
     }
 }
-
-/**
- * Create a new instance of the workload module.
- * @return {WorkloadModuleInterface}
- */
 
 function createWorkloadModule() {
     return new CastVoteWorkload();

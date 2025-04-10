@@ -4,58 +4,55 @@ const { WorkloadModuleBase } = require('@hyperledger/caliper-core');
 
 class RegisterVoterWorkload extends WorkloadModuleBase {
 
-    /**
-     * Initializes the workload module instance.
-     */
-
     constructor() {
         super();
         this.txIndex = 0;
         this.constituency = 'Anand';
+        this.voterIDs = [];
     }
 
-    /**
-     * Initialize the workload module with the given parameters.
-     * @param {number} workerIndex The 0-based index of the worker instantiating the workload module.
-     * @param {number} totalWorkers The total number of workers participating in the round.
-     * @param {number} roundIndex The 0-based index of the currently executing round.
-     * @param {Object} roundArguments The user-provided arguments for the round from the benchmark configuration file.
-     * @param {BlockchainInterface} sutAdapter The adapter of the underlying SUT.
-     * @param {Object} sutContext The custom context object provided by the SUT adapter.
-     * @async
-     */
-    
     async initializeWorkloadModule(workerIndex, totalWorkers, roundIndex, roundArguments, sutAdapter, sutContext) {
         await super.initializeWorkloadModule(workerIndex, totalWorkers, roundIndex, roundArguments, sutAdapter, sutContext);
-        // this.startingKey = 'Client' + this.workerIndex + '_CAR' + this.roundArguments.startKey;
-        // this.endingKey = 'Client' + this.workerIndex + '_CAR' + this.roundArguments.endKey;
-        console.log(`Initializing workload module for worker ${workerIndex}`);
+
+        // Precompute voter IDs and assign range per worker
+        const totalVoters = 100;
+        const votersPerWorker = Math.ceil(totalVoters / totalWorkers);
+        const start = workerIndex * votersPerWorker + 1;
+        const end = Math.min((workerIndex + 1) * votersPerWorker, totalVoters);
+
+        for (let i = start; i <= end; i++) {
+            this.voterIDs.push(`VOT${String(i).padStart(4, '0')}`);
+        }
+
+        console.log(`[RegisterVoter][Worker ${workerIndex}] Assigned voter IDs from VOT${String(start).padStart(4, '0')} to VOT${String(end).padStart(4, '0')}`);
+
+
+        // Optional: shuffle to simulate random ordering
+        // this.voterIDs = this.voterIDs.sort(() => Math.random() - 0.5);
+        // await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    /**
-     * Assemble TXs for the round.
-     * @return {Promise<TxStatus[]>}
-     */
-
     async submitTransaction() {
+        if (this.txIndex >= this.voterIDs.length) {
+            return;
+        }
+
+        const voterID = this.voterIDs[this.txIndex];
         this.txIndex++;
-        const voterID =  `VOT${String(this.txIndex).padStart(3, '0')}`;
-        // const voterID = `VOT${Math.floor(Math.random() * 10000)}`;
-        // const constituency = 'Anand';
 
         const request = {
             contractId: 'evoting',
             contractFunction: 'RegisterVoter',
             invokerIdentity: 'User1',
             contractArguments: [voterID, this.constituency],
-            readOnly: false // Since this is a write operation
-        }
+            readOnly: false
+        };
 
         try {
-            const result = await this.sutAdapter.sendRequests(request);
-            console.log(`Transaction result: ${JSON.stringify(result)}`);
+            await this.sutAdapter.sendRequests(request);
+            // Commented out for speed: console.log(`Registered ${voterID}`);
         } catch (error) {
-            console.error(`Failed to submit transaction: ${error.message}`);
+            console.error(`Failed to register ${voterID}: ${error.message}`);
         }
     }
 }
