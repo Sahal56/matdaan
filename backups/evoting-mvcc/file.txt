@@ -1,0 +1,73 @@
+// MVVC Solution
+type VoteDelta struct {
+	CandidateID string `json:"candidate_id"`
+	Delta       int    `json:"delta"`
+}
+
+func (s *SmartContract) GetVoteCount(ctx contractapi.TransactionContextInterface, candidateID string) (int, error) {
+	iter, err := ctx.GetStub().GetStateByPartialCompositeKey("vote::"+candidateID, []string{})
+	if err != nil {
+		return 0, fmt.Errorf("failed to retrieve vote deltas: %v", err)
+	}
+	defer iter.Close()
+
+	totalVotes := 0
+	for iter.HasNext() {
+		kv, err := iter.Next()
+		if err != nil {
+			return 0, err
+		}
+		var delta VoteDelta
+		_ = json.Unmarshal(kv.Value, &delta)
+		totalVotes += delta.Delta
+	}
+
+	return totalVotes, nil
+}
+
+
+func (s *SmartContract) CastVote(ctx contractapi.TransactionContextInterface, voterID string, candidateID string) error {
+	// 1. Get Voter
+	voterBytes, err := ctx.GetStub().GetState(voterID)
+	if err != nil || voterBytes == nil {
+		return fmt.Errorf("failed to read voter state or not found: %v", err)
+	}
+	var voter Voter
+	_ = json.Unmarshal(voterBytes, &voter)
+
+	if voter.HasVoted {
+		return fmt.Errorf("voter %s has already voted", voterID)
+	}
+
+	// 2. Get Candidate
+	candidateBytes, err := ctx.GetStub().GetState(candidateID)
+	if err != nil || candidateBytes == nil {
+		return fmt.Errorf("candidate %s not found: %v", candidateID, err)
+	}
+	var candidate Candidate
+	_ = json.Unmarshal(candidateBytes, &candidate)
+
+	// 3. Check constituency
+	if voter.Constituency != candidate.Constituency {
+		return fmt.Errorf("voter:%s cannot vote for candidate of another constituency", voterID)
+	}
+
+	// 4. Record vote delta with a unique key
+	deltaKey := fmt.Sprintf("vote::%s::%s", candidateID, ctx.GetStub().GetTxID())
+	delta := VoteDelta{CandidateID: candidateID, Delta: 1}
+	deltaBytes, _ := json.Marshal(delta)
+	err = ctx.GetStub().PutState(deltaKey, deltaBytes)
+	if err != nil {
+		return fmt.Errorf("failed to record vote delta: %v", err)
+	}
+
+	// 5. Update Voter as having voted
+	voter.HasVoted = true
+	voterBytes, _ = json.Marshal(voter)
+	err = ctx.GetStub().PutState(voterID, voterBytes)
+	if err != nil {
+		return fmt.Errorf("failed to update voter status: %v", err)
+	}
+
+	return nil
+}
