@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"evoting_server/models"
@@ -124,6 +125,7 @@ func (s *VotingService) RegisterVoter(ctx context.Context, voterID, name, consti
 }
 
 func (s *VotingService) CastVote(voterID string, candidateID string) error {
+	start := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -142,6 +144,9 @@ func (s *VotingService) CastVote(voterID string, candidateID string) error {
 	}
 
 	_, err = s.VotersColl.UpdateOne(ctx, bson.M{"_id": voterID}, bson.M{"$set": bson.M{"hasVoted": true}})
+
+	elapsed := time.Since(start)
+	log.Printf(">> Vote cast successfully in %s\n", elapsed)
 	return err
 }
 
